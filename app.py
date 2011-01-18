@@ -4,6 +4,9 @@ import random
 import Queue
 from threading import Thread
 
+random.seed()
+messageQueue = Queue.Queue()
+
 def make_text(string):
     return string
 
@@ -14,9 +17,6 @@ def messageCreator():
         time.sleep(x)
         messageQueue.put("Message #%d (delay: %f)" % (messageNum, x))
         messageNum += 1
-
-random.seed()
-messageQueue = Queue.Queue()
 
 t = Thread(target=messageCreator)
 t.daemon = True

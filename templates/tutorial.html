@@ -8,11 +8,10 @@ $def with (form, text)
         <title>Squeak!</title>
         <link rel="stylesheet" type="text/css" href="/static/tutorial.css" />
         
-        <script type="text/javascript" src="/static/jquery.js"></script>
         <script type="text/javascript" src="/static/main.js"></script>
     </head>
 
-    <body>
+    <body onLoad="onLoadHandler()">
         <br>
         <form class="form" method="post"> 
         $:form.render()
@@ -20,7 +19,7 @@ $def with (form, text)
         </form>
 
         <br><br>
-        <ul id="itemList">
+        <ul id="messageList">
         </ul>
     </body>
     
