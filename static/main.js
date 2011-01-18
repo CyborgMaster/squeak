@@ -34,8 +34,6 @@ function appendToList(text)
 function messageRecieved(message)
 {
     appendToList(message);
-    //document.getElementByID('messageList').lastChild().hide().fadeIn(1500);
-//    jQuery('ul#itemList li:last').hide().fadeIn(1500);
     loadXMLDoc(location.href, messageRecieved);
 }
 
@@ -46,7 +44,6 @@ function startMessageLoop()
 
 function onLoadHandler()
 {
-    appendToList("test");
     startMessageLoop();
 }
 

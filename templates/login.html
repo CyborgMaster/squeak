@@ -1,0 +1,22 @@
+$def with (form)
+
+<!doctype html>
+
+<html>
+
+    <head>
+        <title>Squeak!</title>
+        <link rel="stylesheet" type="text/css" href="/static/tutorial.css" />
+        <script type="text/javascript" src="/static/login.js"></script>
+    </head>
+
+    <body>
+        <br>
+        <form class="form" method="post"> 
+        $:form.render()
+        <input class="button" type="submit" value="send"/>
+        </form>
+
+    </body>
+    
+</html>

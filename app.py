@@ -22,13 +22,15 @@ t = Thread(target=messageCreator)
 t.daemon = True
 t.start()
 
-urls = ('/', 'tutorial')
+urls = ('/', 'tutorial',
+        '/login', 'login')
+
 render = web.template.render('templates/')
 
 app = web.application(urls, globals())
 
 my_form = web.form.Form(
-                web.form.Textbox('', class_='textfield', id='textfield'),
+                web.form.Textbox('Username', class_='textfield', id='textfield'),
                 )
 
 class tutorial:
@@ -38,6 +40,14 @@ class tutorial:
 
     def POST(self):
         return messageQueue.get()
+
+class login:
+    def GET(self):
+        form = my_form()
+        return render.login(form);
+
+    def POST(self):
+        return web.data();
 
 if __name__ == '__main__':
     app.run()
