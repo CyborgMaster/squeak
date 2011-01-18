@@ -1,26 +1,29 @@
-$def with (form, text)
+$def with (form, name)
 
 <!doctype html>
 
 <html>
 
-    <head>
-        <title>Squeak!</title>
-        <link rel="stylesheet" type="text/css" href="/static/tutorial.css" />
-        
-        <script type="text/javascript" src="/static/main.js"></script>
-    </head>
-
-    <body onLoad="onLoadHandler()">
-        <br>
-        <form class="form" method="post"> 
-        $:form.render()
-        <input class="button" type="submit" value="send"/>    
-        </form>
-
-        <br><br>
-        <ul id="messageList">
-        </ul>
-    </body>
+  <head>
+    <title>Squeak!</title>
+    <link rel="stylesheet" type="text/css" href="/static/tutorial.css" />
     
+    <script type="text/javascript" src="/static/jQuery.js"></script>
+    <script type="text/javascript" src="/static/main.js"></script>
+    
+  </head>
+
+  <body onLoad="onLoadHandler()">
+    <p>Logged in as: $name</p>
+    <br>
+    <form class="form" method="post"> 
+      $:form.render()
+      <input class="button" type="submit" value="send"/>    
+    </form>
+
+    <br><br>
+    <ul id="messageList">
+    </ul>
+  </body>
+  
 </html>
