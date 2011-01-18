@@ -44,10 +44,27 @@ function startMessageLoop()
 
 function onLoadHandler()
 {
-    startMessageLoop();
+    setTimeout(function()
+               {
+                   startMessageLoop();
+               }, 500);
 }
 
 // jQuery(document).ready(function() 
+//                        {
+//                            startMessageLoop();
+//                        });
+
+// jQuery(document).ready(function() {
+//   setTimeout(startMessageLoop(), 500);
+// });
+
+// jQuery(document).ready(function() {
+//   setTimeout(function () {
+//     startMessageLoop();
+//   }, 500);
+// });
+
 //                        {
 //                            var input_string = jQuery("input#textfield").val();
 //                            var request = {
