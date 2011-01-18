@@ -12,17 +12,18 @@ messageQueues = dict()
 
 #TODO: kill queues when they get too full
 
-def make_text(string):
-    return string
-
 def messageCreator():
     messageNum = 1
     while True:
         x = random.uniform(0, 5)
         time.sleep(x)
-        for messageQueue in messageQueues.itervalues():
-            messageQueue.put("Message #%d (delay: %f)" % (messageNum, x))
+        postMessage("Message #%d (delay: %f)" % (messageNum, x))
         messageNum += 1
+
+def postMessage(message):
+    for messageQueue in messageQueues.itervalues():
+        messageQueue.put(message);
+
 
 t = Thread(target=messageCreator)
 t.daemon = True
@@ -30,11 +31,10 @@ t.start()
 
 
 #set up web.py
-urls = ('/', 'tutorial',
+urls = ('/', 'root',
+        '/chat', 'chat',
         '/login', 'login')
-
 render = web.template.render('templates/')
-
 app = web.application(urls, globals())
 
 #make sessions work with the reloader (for debug mode)
@@ -52,15 +52,22 @@ login_form = web.form.Form(
 message_form = web.form.Form(
                 web.form.Textbox('', class_='textfield', id='textfield'),
                 )
+class root:
+    def GET(self):
+        if session.loggedIn:
+            raise web.seeother('/chat')
+        else:
+            raise web.seeother('/login')
 
-class tutorial:
+
+class chat:
     def GET(self):
         form = message_form()
         web.debug(session)
         if not session.loggedIn:
             raise web.seeother('/login')
         else:
-            return render.tutorial(form, session.name)
+            return render.chat(form, session.name)
 
     def POST(self):
         return messageQueues[session.session_id].get()
@@ -76,12 +83,12 @@ class login:
         session.name = i.Username
         session.loggedIn = True
         messageQueues[session.session_id] = Queue()
-        raise web.seeother('/')
-        #return web.data()
+        raise web.seeother('/chat')
 
 if __name__ == '__main__':
     #kill all old sessions
     shutil.rmtree('sessions', True)
     os.mkdir('sessions')
+    #run the app
     app.run()
 
