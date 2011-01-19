@@ -1,4 +1,4 @@
-$def with (form, name)
+$def with (form, name, clientId)
 
 <!doctype html>
 
@@ -6,17 +6,19 @@ $def with (form, name)
 
   <head>
     <title>Squeak!</title>
-    <link rel="stylesheet" type="text/css" href="/static/tutorial.css" />
+    <link rel="stylesheet" type="text/css" href="/static/main.css" />
     
-    <script type="text/javascript" src="/static/jQuery.js"></script>
+    <script type="text/javascript" src="/static/date.format.js"></script>
+    <!--<script type="text/javascript" src="/static/jQuery.js"></script>-->
     <script type="text/javascript" src="/static/main.js"></script>
     
   </head>
 
-  <body onLoad="onLoadHandler()">
-    <p>Logged in as: $name</p>
+  <body onLoad="onLoadHandler(); document.chat.messageTextBox.focus()">
+    <div id="clientId" style:display="inherit">$clientId</div>
+    <p>Logged in as: <span id="userName">$name</span></p>
     <br>
-    <form class="form" method="post"> 
+    <form class="form" name="chat" method="post" onSubmit="sendMessage(); return false;">
       $:form.render()
       <input class="button" type="submit" value="send"/>    
     </form>

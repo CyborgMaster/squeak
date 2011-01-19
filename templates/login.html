@@ -6,12 +6,12 @@ $def with (form)
 
     <head>
         <title>Squeak!</title>
-        <link rel="stylesheet" type="text/css" href="/static/tutorial.css" />
+        <link rel="stylesheet" type="text/css" href="/static/main.css" />
     </head>
 
-    <body>
+    <body onLoad="document.login.textfield.focus()">
         <br>
-        <form class="form" method="post"> 
+        <form class="form" name="login" method="post"> 
         $:form.render()
         <input class="button" type="submit" value="send"/>
         </form>
