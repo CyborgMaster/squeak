@@ -1,4 +1,6 @@
-function loadXMLDoc(url,cfunc)
+var clientID;
+
+function ajaxRequest(type, url, cfunc, data)
 {
     var xmlhttp;
 
@@ -11,16 +13,31 @@ function loadXMLDoc(url,cfunc)
         xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
     }
     
-    xmlhttp.onreadystatechange = function()
+    if (cfunc)
     {
-        if (xmlhttp.readyState==4 && xmlhttp.status==200)
+        xmlhttp.onreadystatechange = function()
         {
-            cfunc(xmlhttp.responseText);
-        }
-    };
+            if (xmlhttp.readyState==4 && xmlhttp.status==200)
+            {
+                cfunc(xmlhttp.responseText);
+            }
+        };
+    }
 
-    xmlhttp.open("POST", url, true);
-    xmlhttp.send();
+    if (type == 'POST')
+    {
+        xmlhttp.open(type, url, true);
+        xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        xmlhttp.setRequestHeader("Content-length", data.length);
+        xmlhttp.setRequestHeader("Connection", "close");
+        xmlhttp.send(data);
+    }
+    else
+    {
+        xmlhttp.open(type, url + '?' + data, true);
+        xmlhttp.send();    
+    }
+    
 }
 
 function appendToList(text)
@@ -28,26 +45,46 @@ function appendToList(text)
     var mList = document.getElementById('messageList');
     var liTag = document.createElement('li');
     liTag.innerHTML=text;
-    mList.appendChild(liTag);
+    mList.insertBefore(liTag,mList.childNodes[0]);
 }
 
-function messageRecieved(message)
+function messageRecieved(messageJSON)
 {
-    appendToList(message);
-    loadXMLDoc(location.href, messageRecieved);
+    var message = JSON.parse(messageJSON);
+    var timestamp = new Date();
+    timestamp.setTime(message.timestamp * 1000)
+    appendToList('(' + timestamp.format('isoTime') + ') ' + message.sender + ': ' + message.text);
+    messageLoop();
 }
 
-function startMessageLoop()
+function messageLoop()
 {
-    loadXMLDoc(location.href, messageRecieved);
+    ajaxRequest('GET', '/messages', messageRecieved, 'clientId=' + clientId);
 }
 
 function onLoadHandler()
 {
+    clientId = document.getElementById('clientId').innerHTML;
+
     setTimeout(function()
                {
-                   startMessageLoop();
+                   messageLoop();
                }, 500);
+}
+
+function formatTime(date)
+{
+    return date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
+}
+
+function sendMessage()
+{
+    var message = {};
+    message.sender = document.getElementById('userName').innerHTML;
+    message.text = document.getElementById('messageTextBox').value;
+    message.timestamp = new Date().getTime() / 1000; //expects number of seconds, not milliseconds
+    ajaxRequest('POST', '/messages', null, JSON.stringify(message));    
+    document.getElementById('messageTextBox').value = "";
 }
 
 // jQuery(document).ready(function() 
