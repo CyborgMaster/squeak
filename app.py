@@ -42,9 +42,12 @@ message_form = web.form.Form(
                 )
 
 def loadHistory(messageQueue):
+    messageQueue.mutex.acquire()
     for i in range(10):
         messageQueue.put({'sender':'system', 'text':"History #%d" % i, \
                               'timestamp': time.time()})
+    messageQueue.mutex.release()
+
 def postMessage(message):
     for messageQueue in messageQueues.itervalues():
         messageQueue.put(message)
@@ -64,8 +67,9 @@ class chat:
             raise web.seeother('/login')
         else:
             #set up message queue
-            clientId = str(random.getrandbits(32))
             newQueue = Queue()
+            convertQueueToRLock(newQueue)
+            clientId = str(random.getrandbits(32))
             loadHistory(newQueue)
             messageQueues[clientId] = newQueue
             #return webpage
@@ -73,6 +77,14 @@ class chat:
 
     def POST(self):
         return messageQueues[session.session_id].get()
+
+#convert queue to use re-entrant locks so we can use it for addtional thread control
+#IMPORTANT!! Depends on the current python implimentation of Queue, if it changes, this may break!
+def convertQueueToRLock(queue):
+    queue.mutex = threading.RLock()
+    queue.not_empty = threading.Condition(queue.mutex)
+    queue.not_full = threading.Condition(queue.mutex)
+    queue.all_tasks_done = threading.Condition(queue.mutex)
 
 class messages:
     def GET(self):
