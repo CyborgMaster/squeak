@@ -50,10 +50,27 @@ function appendToList(text)
 
 function messageRecieved(messageJSON)
 {
-    var message = JSON.parse(messageJSON);
-    var timestamp = new Date();
-    timestamp.setTime(message.timestamp * 1000)
-    appendToList('(' + timestamp.format('isoTime') + ') ' + message.sender + ': ' + message.text);
+    var messageList = JSON.parse(messageJSON, function(key, value)
+                             {
+                                 if (key == 'timestamp')
+                                 {
+                                     var time = new Date();
+                                     time.setTime(value * 1000);
+                                     return time;
+                                 }                                     
+                                 else
+                                 {
+                                     return value;
+                                 }
+                             });
+
+    for (var i = 0; i < messageList.length; i++)
+    {
+        var message = messageList[i];
+        appendToList('(' + message.timestamp.format('isoTime') + ') ' 
+                     + message.sender + ': ' + message.text);
+    }
+
     messageLoop();
 }
 
@@ -70,11 +87,6 @@ function onLoadHandler()
                {
                    messageLoop();
                }, 500);
-}
-
-function formatTime(date)
-{
-    return date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
 }
 
 function sendMessage()
