@@ -1,6 +1,8 @@
 var clientID;
 
-var ajaxRequests = [];
+//array  to store references to the XMLHttpRequest objects so they don't get 
+//garbage collected while still in use
+var ajaxRequests = new Array(10);
 
 function ajaxRequest(type, url, data, successFunc, errorFunc)
 {
@@ -9,7 +11,7 @@ function ajaxRequest(type, url, data, successFunc, errorFunc)
 
     var xmlHttp;
     var xmlHttpTimeout;
-
+    
     if (window.XMLHttpRequest)
     {// code for IE7+, Firefox, Chrome, Opera, Safari
         xmlHttp = new XMLHttpRequest();
@@ -18,8 +20,12 @@ function ajaxRequest(type, url, data, successFunc, errorFunc)
     {// code for IE6, IE5
         xmlHttp = new ActiveXObject("Microsoft.XMLHTTP");
     }
-    
-    ajaxRequests[ajaxRequest.requestNum++] = xmlHttp;
+
+    //take care of storing the XMLHttpRequest object    
+    var thisRequestNum = ajaxRequest.requestNum;
+    ajaxRequest.requestNum += 1;
+    ajaxRequest.requestNum %= ajaxRequests.length;
+    ajaxRequests[thisRequestNum] = xmlHttp;
     
     xmlHttp.onreadystatechange = function()
     {
@@ -36,6 +42,8 @@ function ajaxRequest(type, url, data, successFunc, errorFunc)
             {
                 appendToList("Ajax Error: " + type + ", " + xmlHttp.status);
             }
+
+            delete(ajaxRequests[thisRequestNum]);
         }
     };
     
