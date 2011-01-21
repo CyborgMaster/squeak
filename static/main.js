@@ -1,43 +1,66 @@
 var clientID;
 
-function ajaxRequest(type, url, cfunc, data)
+var ajaxRequests = [];
+
+function ajaxRequest(type, url, data, successFunc, errorFunc)
 {
-    var xmlhttp;
+    if (ajaxRequest.requestNum == undefined)
+        ajaxRequest.requestNum = 0;
+
+    var xmlHttp;
+    var xmlHttpTimeout;
 
     if (window.XMLHttpRequest)
     {// code for IE7+, Firefox, Chrome, Opera, Safari
-        xmlhttp=new XMLHttpRequest();
+        xmlHttp = new XMLHttpRequest();
     }
     else
     {// code for IE6, IE5
-        xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+        xmlHttp = new ActiveXObject("Microsoft.XMLHTTP");
     }
     
-    if (cfunc)
+    ajaxRequests[ajaxRequest.requestNum++] = xmlHttp;
+    
+    xmlHttp.onreadystatechange = function()
     {
-        xmlhttp.onreadystatechange = function()
+        if (xmlHttp.readyState == 4)
         {
-            if (xmlhttp.readyState==4 && xmlhttp.status==200)
+            clearTimeout(xmlHttpTimeout); 
+            
+            if (xmlHttp.status == 200)
             {
-                cfunc(xmlhttp.responseText);
+                if (successFunc)
+                    successFunc(xmlHttp.responseText);
             }
-        };
-    }
-
+            else
+            {
+                appendToList("Ajax Error: " + type + ", " + xmlHttp.status);
+            }
+        }
+    };
+    
     if (type == 'POST')
     {
-        xmlhttp.open(type, url, true);
-        xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-        xmlhttp.setRequestHeader("Content-length", data.length);
-        xmlhttp.setRequestHeader("Connection", "close");
-        xmlhttp.send(data);
+        xmlHttp.open(type, url, true);
+        xmlHttp.setRequestHeader("Content-type", 
+                                 "application/x-www-form-urlencoded");
+        xmlHttp.setRequestHeader("Content-length", data.length);
+        xmlHttp.setRequestHeader("Connection", "close");
+        xmlHttp.send(data);
     }
     else
     {
-        xmlhttp.open(type, url + '?' + data, true);
-        xmlhttp.send();    
+        xmlHttp.open(type, url + '?' + data, true);
+        xmlHttp.send();    
     }
     
+    //timeout in 1 minute
+    xmlHttpTimeout = setTimeout(function()
+                                {
+                                    xmlHttp.abort(); 
+                                    if (errorFunc)
+                                        errorFunc();
+                                }, 90000);
 }
 
 function appendToList(text)
@@ -48,21 +71,28 @@ function appendToList(text)
     mList.insertBefore(liTag,mList.childNodes[0]);
 }
 
+function messageTimeout()
+{
+    appendToList("recieve timedout");
+    messageLoop();
+}
+
 function messageRecieved(messageJSON)
 {
-    var messageList = JSON.parse(messageJSON, function(key, value)
-                             {
-                                 if (key == 'timestamp')
+    var messageList = JSON.parse(messageJSON, 
+                                 function(key, value)
                                  {
-                                     var time = new Date();
-                                     time.setTime(value * 1000);
-                                     return time;
-                                 }                                     
-                                 else
-                                 {
-                                     return value;
-                                 }
-                             });
+                                     if (key == 'timestamp')
+                                     {
+                                         var time = new Date();
+                                         time.setTime(value * 1000);
+                                         return time;
+                                     }                                     
+                                     else
+                                     {
+                                         return value;
+                                     }
+                                 });
 
     for (var i = 0; i < messageList.length; i++)
     {
@@ -76,7 +106,12 @@ function messageRecieved(messageJSON)
 
 function messageLoop()
 {
-    ajaxRequest('GET', '/messages', messageRecieved, 'clientId=' + clientId);
+    setTimeout(getMessage, 500);
+}
+
+function getMessage()
+{
+    ajaxRequest('GET', 'messages', 'clientId=' + clientId, messageRecieved, messageTimeout);    
 }
 
 function onLoadHandler()
@@ -95,7 +130,7 @@ function sendMessage()
     message.sender = document.getElementById('userName').innerHTML;
     message.text = document.getElementById('messageTextBox').value;
     message.timestamp = new Date().getTime() / 1000; //expects number of seconds, not milliseconds
-    ajaxRequest('POST', '/messages', null, JSON.stringify(message));    
+    ajaxRequest('POST', 'messages', JSON.stringify(message));    
     document.getElementById('messageTextBox').value = "";
 }
 
