@@ -61,7 +61,7 @@ class chat:
         #web.debug("multiprocess: " + str(web.ctx.environ['wsgi.multiprocess']))
 
         form = message_form()
-        if not session.loggedIn:
+        if not hasattr(session, 'loggedIn') or not session.loggedIn:
             raise web.seeother('/login')
         else:
             #set up message queue
@@ -88,7 +88,7 @@ def convertQueueToRLock(queue):
 
 class messages:
     def GET(self):
-        if not session.loggedIn:
+        if not hasattr(session, 'loggedIn') or not session.loggedIn:
             raise web.seeother('/login')
         else:
             #get all pending messages
