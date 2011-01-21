@@ -73,7 +73,7 @@ function appendToList(text)
 
 function messageTimeout()
 {
-    appendToList("recieve timedout");
+    appendToList("Message loop timed out");
     messageLoop();
 }
 
@@ -106,11 +106,6 @@ function messageRecieved(messageJSON)
 
 function messageLoop()
 {
-    setTimeout(getMessage, 500);
-}
-
-function getMessage()
-{
     ajaxRequest('GET', 'messages', 'clientId=' + clientId, messageRecieved, messageTimeout);    
 }
 
@@ -133,56 +128,4 @@ function sendMessage()
     ajaxRequest('POST', 'messages', JSON.stringify(message));    
     document.getElementById('messageTextBox').value = "";
 }
-
-// jQuery(document).ready(function() 
-//                        {
-//                            startMessageLoop();
-//                        });
-
-// jQuery(document).ready(function() {
-//   setTimeout(startMessageLoop(), 500);
-// });
-
-// jQuery(document).ready(function() {
-//   setTimeout(function () {
-//     startMessageLoop();
-//   }, 500);
-// });
-
-//                        {
-//                            var input_string = jQuery("input#textfield").val();
-//                            var request = {
-//                                type: "POST",
-//                                data: {textfield : input_string},
-//                                beforeSend: function ()
-//                                {
-                                   
-//                                },
-
-//                                success: function(data) 
-//                                {
-//                                    jQuery('#itemList').append("<li>" + data + "</li>")
-//                                    jQuery('ul#itemList li:last').hide().fadeIn(1500);
-//                                    jQuery.ajax(request);
-//                                }
-//                            };
-                           
-//                            startMessageLoop();
-                           
-//                        });
-
-
-//     jQuery(".button").click(function() {
-//                                 var input_string = $$("input#textfield").val();
-//                                 jQuery.ajax({
-//                                                 type: "POST",
-//                                                 data: {textfield : input_string},
-//                                                 success: function(data) {
-//                                                     jQuery('#itemList').append("<li>" + data + "</li>")
-//                                                     jQuery('ul#itemList li:last').hide().fadeIn(1500);
-//                                                 },
-//                                             });
-//                                 return false;
-//                             });
-// });
 
