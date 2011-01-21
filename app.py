@@ -6,8 +6,9 @@ import os
 import json
 import threading
 
-from Queue import Queue
 from threading import Thread
+from Queue import Queue
+from Queue import Empty
 
 random.seed()
 messageQueues = dict()
@@ -21,19 +22,13 @@ urls = ('/', 'root',
         '/login', 'login',
         '/messages', 'messages')
 
-render = web.template.render('templates/')
-app = web.application(urls, globals())
+rootPath = os.path.dirname(__file__)
 
-#make sessions work with the reloader (for debug mode)
-if web.config.get('_session') is None:
-    session = web.session.Session(app, web.session.DiskStore('sessions'), \
-                                  initializer={'loggedIn': False})
-    web.config._session = session
-else:
-    session = web.config._session
+render = web.template.render(os.path.join(rootPath, 'templates/'))
 
 login_form = web.form.Form(
-                web.form.Textbox('Username', class_='textfield', id='textfield'),
+                web.form.Textbox('Username', class_='textfield',
+                                 id='textfield'),
                 web.form.Password('password'),
                 )
 
@@ -55,13 +50,16 @@ def postMessage(message):
 
 class root:
     def GET(self):
-        if session.loggedIn:
+        if hasattr(session, 'loggedIn') and session.loggedIn:
             raise web.seeother('/chat')
         else:
             raise web.seeother('/login')
 
 class chat:
     def GET(self):
+        #web.debug("multithreading: " + str(web.ctx.environ['wsgi.multithread']))
+        #web.debug("multiprocess: " + str(web.ctx.environ['wsgi.multiprocess']))
+
         form = message_form()
         if not session.loggedIn:
             raise web.seeother('/login')
@@ -78,8 +76,10 @@ class chat:
     def POST(self):
         return messageQueues[session.session_id].get()
 
-#convert queue to use re-entrant locks so we can use it for addtional thread control
-#IMPORTANT!! Depends on the current python implimentation of Queue, if it changes, this may break!
+#convert queue to use re-entrant locks so we can use
+#it for addtional thread control
+#IMPORTANT!! Depends on the current python
+#implimentation of Queue, if it changes, this may break!
 def convertQueueToRLock(queue):
     queue.mutex = threading.RLock()
     queue.not_empty = threading.Condition(queue.mutex)
@@ -94,12 +94,24 @@ class messages:
             #get all pending messages
             clientQueue = messageQueues[web.input().clientId]
             messageList = []
+            #web.debug("getting messages...")
             if clientQueue.empty():
-                messageList.append(clientQueue.get())
+                try:
+                    message = clientQueue.get(True, 60)
+                except Empty:
+                    #web.debug("Timed out!")
+                    pass
+                else:
+                    messageList.append(message)
             else:
-                while not clientQueue.empty():
-                    messageList.append(clientQueue.get())
-
+                while True:
+                    try:
+                        message = clientQueue.get(False)
+                    except Empty:
+                        break
+                    else:
+                        messageList.append(message)
+            #web.debug("returning : " + json.dumps(messageList))
             return json.dumps(messageList)
 
     def POST(self):
@@ -119,7 +131,30 @@ class login:
         session.loggedIn = True
         raise web.seeother('/chat')
 
+
+
+
+#make sessions work with the reloader (for debug mode)
+# if web.config.get('_session') is None:
+#     session = web.session.Session(
+#         app,
+#         web.session.DiskStore('sessions'),
+#         initializer={'loggedIn': False})
+#     web.config._session = session
+# else:
+#     session = web.config._session
+
+app = web.application(urls, globals())
+
+curdir = os.path.dirname(__file__)
+session = web.session.Session(
+    app,
+    web.session.DiskStore(os.path.join(curdir,'sessions')),)
+
+application = app.wsgifunc()
+
 if __name__ == '__main__':
+    app = web.application(urls, globals())
     app.run()
 
 
