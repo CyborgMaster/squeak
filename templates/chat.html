@@ -15,7 +15,7 @@ $def with (form, name, clientId)
   </head>
 
   <body onLoad="onLoadHandler(); document.chat.messageTextBox.focus()">
-    <div id="clientId" style:display="inherit">$clientId</div>
+    <div id="clientId" style="display:none">$clientId</div>
     <p>Logged in as: <span id="userName">$name</span></p>
     <br>
     <form class="form" name="chat" method="post" onSubmit="sendMessage(); return false;">

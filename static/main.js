@@ -1,10 +1,11 @@
 var clientID;
+var userName;
 
 //array  to store references to the XMLHttpRequest objects so they don't get 
 //garbage collected while still in use
 var ajaxRequests = new Array(10);
 
-function ajaxRequest(type, url, data, successFunc, errorFunc)
+function ajaxRequest(type, url, data, successFunc, timeoutFunc, errorFunc)
 {
     if (ajaxRequest.requestNum == undefined)
         ajaxRequest.requestNum = 0;
@@ -40,7 +41,8 @@ function ajaxRequest(type, url, data, successFunc, errorFunc)
             }
             else
             {
-                appendToList("Ajax Error: " + type + ", " + xmlHttp.status);
+                if (errorFunc)
+                    errorFunc(xmlHttp.status);
             }
 
             delete(ajaxRequests[thisRequestNum]);
@@ -66,8 +68,8 @@ function ajaxRequest(type, url, data, successFunc, errorFunc)
     xmlHttpTimeout = setTimeout(function()
                                 {
                                     xmlHttp.abort(); 
-                                    if (errorFunc)
-                                        errorFunc();
+                                    if (timeoutFunc)
+                                        timeoutFunc();
                                 }, 90000);
 }
 
@@ -82,6 +84,11 @@ function appendToList(text)
 function messageTimeout()
 {
     appendToList("Message loop timed out");
+}
+
+function messageError(status)
+{
+    appendToList("Ajax Error: " + type + ", " + status);
     messageLoop();
 }
 
@@ -120,6 +127,7 @@ function messageLoop()
 function onLoadHandler()
 {
     clientId = document.getElementById('clientId').innerHTML;
+    userName = document.getElementById('userName').innerHTML;
 
     setTimeout(function()
                {
@@ -129,9 +137,14 @@ function onLoadHandler()
 
 function sendMessage()
 {
+    //don't send if the message is blank
+    var messageText = document.getElementById('messageTextBox').value;
+    if (messageText == "")
+        return;
+
     var message = {};
-    message.sender = document.getElementById('userName').innerHTML;
-    message.text = document.getElementById('messageTextBox').value;
+    message.sender = userName;    
+    message.text = messageText;
     message.timestamp = new Date().getTime() / 1000; //expects number of seconds, not milliseconds
     ajaxRequest('POST', 'messages', JSON.stringify(message));    
     document.getElementById('messageTextBox').value = "";
