@@ -104,7 +104,7 @@ function messageRecieved(messageJSON)
                                      if (key == 'timestamp')
                                      {
                                          var time = new Date();
-                                         time.setTime(value * 1000);
+                                         time.setTime(value);
                                          return time;
                                      }                                     
                                      else
@@ -154,7 +154,7 @@ function sendMessage()
     var message = {};
     message.sender = userName;    
     message.text = messageText;
-    message.timestamp = new Date().getTime() / 1000; //expects number of seconds, not milliseconds
+    message.timestamp = new Date().getTime(); 
     ajaxRequest('POST', 'messages', JSON.stringify(message));    
     document.getElementById('messageTextBox').value = "";
 }

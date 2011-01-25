@@ -46,7 +46,7 @@ def loadHistory(messageQueue):
     messageQueue.mutex.acquire()
     for i in range(10):
         messageQueue.put({'sender':'system', 'text':"History #%d" % i, \
-                              'timestamp': time.time()})
+                              'timestamp': time.time() * 1000})
     messageQueue.mutex.release()
 
 def postMessage(message):
@@ -125,7 +125,9 @@ class messages:
     def POST(self):
         #postData = str(web.data());
         #web.debug("!" + postData + "!")
-        postMessage(json.loads(str(web.data())));
+        message = json.loads(str(web.data()))
+        message['timestamp'] = int(message['timestamp'])
+        postMessage(message)
 
 class login:
     def GET(self):
