@@ -43,10 +43,18 @@ message_form = web.form.Form(
                 )
 
 def loadHistory(messageQueue):
+    query = client.add('messages')
+    query.map("Riak.mapValuesJson")
+    query.reduce("function(values) { return values.sort(function(a,b) { return b.timestamp - a.timestamp; }).slice(0,20) }")
+    results = reversed(query.run())
+
     messageQueue.mutex.acquire()
-    for i in range(10):
-        messageQueue.put({'sender':'system', 'text':"History #%d" % i, \
-                              'timestamp': time.time() * 1000})
+    for result in results:
+        messageQueue.put(result)
+
+    # for i in range(10):
+    #     messageQueue.put({'sender':'system', 'text':"History #%d" % i, \
+    #                          'timestamp': time.time() * 1000})
     messageQueue.mutex.release()
 
 def postMessage(message):
