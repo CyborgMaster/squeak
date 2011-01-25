@@ -1,4 +1,4 @@
-var clientID;
+var clientIdNumber;
 var userName;
 
 //array  to store references to the XMLHttpRequest objects so they don't get 
@@ -78,7 +78,11 @@ function appendToList(text)
     var mList = document.getElementById('messageList');
     var liTag = document.createElement('li');
     liTag.innerHTML=text;
-    mList.insertBefore(liTag,mList.childNodes[0]);
+    
+    if (mList.childNodes.length == 0)
+        mList.appendChild(liTag);
+    else
+        mList.insertBefore(liTag,mList.childNodes[0]);
 }
 
 function messageTimeout()
@@ -121,13 +125,18 @@ function messageRecieved(messageJSON)
 
 function messageLoop()
 {
-    ajaxRequest('GET', 'messages', 'clientId=' + clientId, messageRecieved, messageTimeout);    
+    ajaxRequest('GET', 'messages', 'clientId=' + 
+                clientIdNumber + '&noCache=' + new Date().getTime() 
+                , messageRecieved, messageTimeout);    
 }
 
 function onLoadHandler()
 {
-    clientId = document.getElementById('clientId').innerHTML;
-    userName = document.getElementById('userName').innerHTML;
+    var clientTag = document.getElementById('clientId');
+    var temp = clientTag.innerHTML;
+    clientIdNumber = temp;
+    var userTag = document.getElementById('userName');
+    userName = userTag.innerHTML;
 
     setTimeout(function()
                {

@@ -5,6 +5,8 @@ import shutil
 import os
 import json
 import threading
+import riak
+import uuid
 
 from threading import Thread
 from Queue import Queue
@@ -12,6 +14,10 @@ from Queue import Empty
 
 random.seed()
 messageQueues = dict()
+# Connect to Riak.
+client = riak.RiakClient()
+# Choose the bucket to store data in.
+messageBucket = client.bucket('messages')
 
 #TODO: recover gracefully from errors
 #TODO: kill queues when they get too full
@@ -47,6 +53,10 @@ def postMessage(message):
     for messageQueue in messageQueues.itervalues():
         messageQueue.put(message)
 
+    #Save the mesage to Riak.
+    entry = messageBucket.new(str(uuid.uuid1()), message)
+    entry.store()
+
 
 class root:
     def GET(self):
@@ -73,8 +83,6 @@ class chat:
             #return webpage
             return render.chat(form, session.name, clientId)
 
-    def POST(self):
-        return messageQueues[session.session_id].get()
 
 #convert queue to use re-entrant locks so we can use
 #it for addtional thread control
@@ -115,7 +123,7 @@ class messages:
             return json.dumps(messageList)
 
     def POST(self):
-        postData = str(web.data());
+        #postData = str(web.data());
         #web.debug("!" + postData + "!")
         postMessage(json.loads(str(web.data())));
 
